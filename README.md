@@ -190,7 +190,7 @@ service isc-dhcp-server restart
 
 Client yang melalui Switch3 mendapatkan range IP dari 192.170.3.30 - 192.170.3.50
 
-1. Tambahkan line-line berikut di `/etc/dhcp/dhcpd.conf` pada node Jipangu menjadi, sehingga client pada Switch3 mendapat range IP sesuai yang diminta.
+1. Tambahkan line-line berikut di `/etc/dhcp/dhcpd.conf` pada node Jipangu, sehingga client pada Switch3 mendapat range IP sesuai yang diminta.
 
 ![4_dhcpd conf](https://user-images.githubusercontent.com/58259649/141466355-e294a8b4-3066-4483-8047-0cc2f4e2d1e5.jpg)
 
