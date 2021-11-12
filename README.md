@@ -129,7 +129,7 @@ apt-get install isc-dhcp-server -y
 
 9. Pada `/etc/default/isc-dhcp-server` di node Jipangu, perbarui line `INTERFACES=""` menjadi `INTERFACES="eth0"`.
 
-10. Ubah network configuration Loguetown, Alabasta, TottoLand, dan Skypie menjadi seperti berikut.
+10. Ubah network configuration Loguetown, Alabasta, TottoLand, dan Skypie menjadi seperti berikut agar node-node tersebut menggunakan konfigurasi IP dari DHCP Server.
 
 ```
 auto eth0
