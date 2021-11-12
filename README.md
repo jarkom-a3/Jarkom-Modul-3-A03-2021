@@ -10,17 +10,201 @@
 
 ## Soal 1
 
+Diminta membuat topologi seperti di bawah dengan ketentuan EniesLobby sebagai DNS Server, Jipangu sebagai DHCP Server, Water7 sebagai Proxy Server.
+
+![topologi](https://user-images.githubusercontent.com/58259649/141461325-5617caea-2985-448a-b6d2-735982ce4857.png)
+
+1. Buat topologi seperti yang diminta.
+
+![topologi_a03](https://user-images.githubusercontent.com/58259649/141462465-edb1012d-31a3-4dab-9e6e-263353f61511.jpg)
+
+2. Ubah network configuration Foosha menjadi seperti berikut.
+
+```
+auto eth0
+iface eth0 inet dhcp
+
+auto eth1
+iface eth1 inet static
+    address 192.170.1.1
+    netmask 255.255.255.0
+
+auto eth2
+iface eth2 inet static
+    address 192.170.2.1
+    netmask 255.255.255.0
+
+auto eth3
+iface eth3 inet static
+    address 192.170.3.1
+    netmask 255.255.255.0
+
+```
+
+3. Pada `root/.bashrc` Foosha, tambahkan line.
+```
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE -s 192.170.0.0/16
+```
+4. Untuk setiap node, jalankan command berikut.
+```
+echo nameserver 192.168.122.1 > /etc/resolv.conf
+```
+5. Untuk setiap node selain Foosha, sementara ubah network configuration menjadi seperti berikut untuk keperluan akses internet dan konfigurasi. Network configuration pada Loguetown, Alabasta, TottoLand, dan Skypie akan diubah.
+
+- Loguetown
+```
+auto eth0
+iface eth0 inet static
+    address 192.170.1.2
+    netmask 255.255.255.0
+    gateway 192.170.1.1
+
+```
+- Alabasta
+```
+auto eth0
+iface eth0 inet static
+    address 192.170.1.3
+    netmask 255.255.255.0
+    gateway 192.170.1.1
+```
+- EniesLobby
+```
+auto eth0
+iface eth0 inet static
+    address 192.170.2.2
+    netmask 255.255.255.0
+    gateway 192.170.2.1
+```
+- Water7
+```
+auto eth0
+iface eth0 inet static
+    address 192.170.2.3
+    netmask 255.255.255.0
+    gateway 192.170.2.1
+```
+- Jipangu
+```
+auto eth0
+iface eth0 inet static
+    address 192.170.2.4
+    netmask 255.255.255.0
+    gateway 192.170.2.1
+```
+- TottoLand
+```
+auto eth0
+iface eth0 inet static
+    address 192.170.3.2
+    netmask 255.255.255.0
+    gateway 192.170.3.1
+```
+- Skypie
+```
+auto eth0
+iface eth0 inet static
+    address 192.170.3.3
+    netmask 255.255.255.0
+    gateway 192.170.3.1
+```
+
+6. Install bind9 pada EniesLobby (DNS server).
+
+```
+apt-get install bind9 -y
+```
+
+7. Install squid pada Water7 (proxy server).
+
+```
+apt-get install squid -y
+```
+
+8. Install isc-dhcp-server pada Jipangu (DHCP server).
+
+```
+apt-get install isc-dhcp-server -y
+```
+
+9. Pada `/etc/default/isc-dhcp-server` di node Jipangu, perbarui line `INTERFACES=""` menjadi `INTERFACES="eth0"`.
+
+10. Ubah network configuration Loguetown, Alabasta, TottoLand, dan Skypie menjadi seperti berikut.
+
+```
+auto eth0
+iface eth0 inet dhcp
+```
+
 ### Kendala
+
+- Tidak ada
 
 ## Soal 2
 
+Menjadikan Foosha sebagai DHCP Relay.
+
+1. Install isc-dhcp-relay pada Foosha
+
+```
+apt-get install isc-dhcp-relay
+```
+
+2. Ubah `/etc/default/isc-dhcp-relay` pada node Foosha menjadi seperti berikut. `SERVERS` mengarah pada IP Jipangu dan DHCP relay akan melayani DHCP request pada interface eth1, eth2, dan eth3.
+
+![foosha_dhcp_relay](https://user-images.githubusercontent.com/58259649/141465412-1d5314f3-c196-4e08-babe-fbb4194c5fed.jpg)
+
+3. Restart isc-dhcp-relay.
+
+```
+service isc-dhcp-relay restart
+```
+
 ### Kendala
+- Tidak ada
 
 ## Soal 3
 
+Client yang melalui Switch1 mendapatkan range IP dari 192.170.1.20 - 192.170.1.99 dan 192.170.1.150 - 192.170.1.169
+
+1. Ubah `/etc/dhcp/dhcpd.conf` pada node Jipangu menjadi seperti berikut, sehingga client pada Switch1 mendapat range IP sesuai yang diminta.
+
+![switch1](https://user-images.githubusercontent.com/58259649/141465838-5ab7f91e-682d-4034-b6f4-e65997edcb87.jpg)
+
+2. Restart dhcp server.
+
+```
+service isc-dhcp-server restart
+```
+
+3. Restart Loguetown dan Alabasta (client pada Switch1) dan jalankan `ip a` untuk melihat IP masing-masing node.
+
+![3_alabasta](https://user-images.githubusercontent.com/58259649/141466190-d5e9ca68-be9e-43d8-aeee-613419bb252a.jpg)
+
+![3_loguetown](https://user-images.githubusercontent.com/58259649/141466199-cdc0427c-3709-464a-b9b3-cb6a3d63f5d0.jpg)
+
 ### Kendala
+- Tidak ada
 
 ## Soal 4
+
+Client yang melalui Switch3 mendapatkan range IP dari 192.170.3.30 - 192.170.3.50
+
+1. Tambahkan line-line berikut di `/etc/dhcp/dhcpd.conf` pada node Jipangu menjadi, sehingga client pada Switch3 mendapat range IP sesuai yang diminta.
+
+![4_dhcpd conf](https://user-images.githubusercontent.com/58259649/141466355-e294a8b4-3066-4483-8047-0cc2f4e2d1e5.jpg)
+
+2. Restart dhcp server.
+
+```
+service isc-dhcp-server restart
+```
+
+3. Restart TottoLand dan Skypie (client pada Switch3) dan jalankan `ip a` untuk melihat IP masing-masing node.
+
+![4_skypie](https://user-images.githubusercontent.com/58259649/141466737-82c39ddb-8b3c-442a-95f0-0f1a60e07c6d.jpg)
+
+![4_tottoland](https://user-images.githubusercontent.com/58259649/141466757-bad6c254-891f-496d-b16b-951268860745.jpg)
 
 ### Kendala
 - Tidak ada
