@@ -408,14 +408,209 @@ Transaksi jual beli tidak dilakukan setiap hari, oleh karena itu akses internet 
 
 ### Kendala
 - Tidak ada
+
 ## Soal 11
+Agar transaksi bisa lebih fokus berjalan, maka dilakukan redirect website agar mudah mengingat website transaksi jual beli kapal. Setiap mengakses google.com, akan diredirect menuju super.franky.yyy.com dengan website yang sama pada soal shift modul 2. Web server super.franky.yyy.com berada pada node Skypie  
+- Enies Lobby
+    - Melakukan konfigurasi DNS menggunakan file-file yang sama pada shift 2 untuk melakukan setting web server supper.franky.A03.com
+      ```
+      nano /etc/bind/named.conf.local
+      ```
+      ```
+      zone "super.franky.A03.com" {
+    	type master;
+    	file "/etc/bind/kaizoku/super.franky.A03.com";
+    	allow-transfer { 192.170.3.69; };
+        };
+      ```
+      ```
+      mkdir /etc/bind/kaizoku/
+      ```
+      ```
+      nano /etc/bind/kaizoku/super.franky.A03.com
+      ```
+      ```
+      ;
+      ; BIND data file for local loopback interface
+      ;
+      $TTL	604800
+      @   	IN  	SOA 	super.franky.A03.com. root.super.franky.A03.com. (
+                              2021110801  	; Serial
+                              604800     	; Refresh
+                              86400     	; Retry
+                              2419200     	; Expire
+                              604800 )   	; Negative Cache TTL
+      ;
+      @   	IN  	NS  	super.franky.A03.com.
+      @   	IN  	A   	192.170.3.69
+      www 	IN  	CNAME   super.franky.A03.com.
+      ```
+- Skypie
+    - Menambahkan file ke ```/var/www/ ``` yang file nya diambil dari 
+      ```
+      wget https://raw.githubusercontent.com/FeinardSlim/Praktikum-Modul-2-Jarkom/main/super.franky.zip
+      ```
+      ```
+      cp -a ./super.franky/. /var/www/super.franky.A03.com
+      ```
+    - Menambahkan ServerName ke line paling akhir dari  ```/etc/apache2/apache2.conf``` 
+      ```
+      nano /etc/apache2/apache2.conf
+      ```
+      ```
+      ServerName 192.170.3.69
+      ```
+    - Menambahkan konfigurasi pada ```sites-available``` sesuai dengan shift 2
+      ```
+      nano /etc/apache2/sites-available/super.franky.A03.com.conf
+      ```
+      ```
+      <VirtualHost *:80>
+        ServerName super.franky.A03.com
+        ServerAlias www.super.franky.A03.com
+
+        ServerAdmin webmaster@localhost
+        DocumentRoot /var/www/super.franky.A03.com
+
+        <Directory /var/www/super.franky.A03.com>
+            Options +Indexes
+            AllowOverride All
+        </Directory>
+
+        <Directory /var/www/super.franky.A03.com/public>
+            Options +Indexes
+        </Directory>
+
+        Alias "/js" "/var/www/super.franky.A03.com/public/js"
+
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+        ErrorDocument 404 /error/404.html
+      </VirtualHost>
+      ```
+    - Mengaktifkan server domain
+      ```
+      a2ensite super.franky.A03.com
+      service apache2 restart
+      ```
+- Water7
+    - Menambahkan nameserver yang mengarah ke EniesLobby
+      ```
+      nano /etc/resolv.conf
+      ```
+      ```
+      nameserver 192.170.2.2
+      ```
+- Loguetown
+    - Melakukan testing dengan ```lynx``` ke domain super.franky.A03.com dengan Username ```luffybelikapalA03``` dan password ```luffy_A03```
+      ```
+      lynx http://super.franky.A03.com
+      ```
+      akan memunculkan hasil seperti berikut
+      ![image](https://user-images.githubusercontent.com/62937814/141609122-0797b97e-0581-42ad-8597-0c885f4251b3.png)
+      sesuai pada shift2 dimana website menampilkan directory listing
+      
+- Water7
+    - Menambahkan konfigurasi agar apabila kita mengakses google.com maka akan direct ke super.franky.A03.com
+      ```
+      nano /etc/squid/squid.conf
+      ```
+      ```
+      include /etc/squid/acl.conf
+
+      http_port 5000
+      visible_hostname jualbelikapal.A03.com
+
+      http_access deny UNAVAILABLE1
+      http_access deny UNAVAILABLE2
+      http_access deny UNAVAILABLE3
+      http_access deny UNAVAILABLE4
+      http_access deny UNAVAILABLE5
+      http_access deny UNAVAILABLE6
+
+      auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/passwd
+      auth_param basic children 5
+      auth_param basic realm Proxy
+      auth_param basic credentialsttl 2 hours
+      auth_param basic casesensitive on
+      acl USERS proxy_auth REQUIRED
+      http_access allow USERS
+
+      acl BLACKLIST dstdomain google.com
+      deny_info http://super.franky.A03.com/ BLACKLIST
+      http_reply_access deny BLACKLIST
+      ```
+- Loguetown
+    - Melakukan testing dengan ```lynx``` ke domain google.com dengan Username ```luffybelikapalA03``` dan password ```luffy_A03```
+      ```
+      lynx google.com
+      ```
+      akan memunculkan hasil seperti berikut
+      ![image](https://user-images.githubusercontent.com/62937814/141609238-4b8a871a-b6dd-4dea-9c6e-93765d23f275.png)
+      ![image](https://user-images.githubusercontent.com/62937814/141609242-02acd75a-1c13-46a1-b0d1-43a1e1cdf967.png)
 
 ### Kendala
+- Pada saat testing website super.franky.A03.com ternyata harus menambahkan nameserver pada water7 yang mengarah ke EniesLobby, jika tidak maka tidak bisa mengakses
 
-## Soal 12
+## Soal 12 & 13
+Saatnya berlayar! Luffy dan Zoro akhirnya memutuskan untuk berlayar untuk mencari harta karun di super.franky.yyy.com. Tugas pencarian dibagi menjadi dua misi, Luffy bertugas untuk mendapatkan gambar (.png, .jpg), sedangkan Zoro mendapatkan sisanya. Karena Luffy orangnya sangat teliti untuk mencari harta karun, ketika ia berhasil mendapatkan gambar, ia mendapatkan gambar dan melihatnya dengan kecepatan 10 kbps (12) Sedangkan, Zoro yang sangat bersemangat untuk mencari harta karun, sehingga kecepatan kapal Zoro tidak dibatasi ketika sudah mendapatkan harta yang diinginkannya (13)  
+- Water7
+    - Menambahkan konfigurasi pada /etc/squid/squid.conf
+      ```
+      include /etc/squid/squid.conf
+      ```
+      ```
+      include /etc/squid/acl.conf
+      include /etc/squid/acl-bandwidth.conf
+
+      http_port 5000
+      visible_hostname jualbelikapal.A03.com
+
+      http_access deny UNAVAILABLE1
+      http_access deny UNAVAILABLE2
+      http_access deny UNAVAILABLE3
+      http_access deny UNAVAILABLE4
+      http_access deny UNAVAILABLE5
+      http_access deny UNAVAILABLE6
+
+      auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/passwd
+      auth_param basic children 5
+      auth_param basic realm Proxy
+      auth_param basic credentialsttl 2 hours
+      auth_param basic casesensitive on
+      acl USERS proxy_auth REQUIRED
+      http_access allow USERS
+
+      acl BLACKLIST dstdomain google.com
+      deny_info http://super.franky.A03.com/ BLACKLIST
+      http_reply_access deny BLACKLIST
+      ```
+    - Melakukan seting kapasitas pada ```/etc/squid/acl-bandwidth.conf```
+      Merah = no. 12
+      Biru = no. 13
+      ![image](https://user-images.githubusercontent.com/62937814/141611594-4679539e-e6af-4a96-9084-a953de371c44.png)
+      untuk luffy karena kecepatannya pada saat mendownload adalah 10 kbps maka 10 kbps = 1250 bit
+      untuk zoro karena kecepatannya tidak dibatasi, maka delay parameternya -1/-1
+
+- Loguetown
+    - Melakukan testing dengan ```lynx``` ke domain super.franky.A03.com dengan Username ```luffybelikapalA03``` dan password ```luffy_A03```
+      ```
+      lynx http://super.franky.A03.com
+      ```
+    - Download file image (jpg atau png)
+      ![image](https://user-images.githubusercontent.com/62937814/141611729-781904b4-bb9e-4895-9483-44cc0cd80e1a.png)
+      Dapat dilihat bahwa kecepatannya adalah 1.3 KiB/s  
+    - Download selain image (jpg atau png)
+      ![image](https://user-images.githubusercontent.com/62937814/141611755-1c906a2b-e1b0-44d1-b394-1e75f2a25ec1.png)
+
+    - Melakukan testing dengan ```lynx``` ke domain super.franky.A03.com dengan Username ```zorobelikapalA03``` dan password ```zoro_A03```
+      ```
+      lynx http://super.franky.A03.com
+      ```
+    - Download file image (jpg atau png)
+      ![image](https://user-images.githubusercontent.com/62937814/141611773-aed1c015-324c-4133-bd78-59559d347b37.png)
+      Dapat dilihat bahwa tidak ada batas kecepatan dan langsung menyimpan foto yang didownload 
 
 ### Kendala
-
-## Soal 13
-
-### Kendala
+- Pada saat mengidentifikasi kecepatan untuk zoro dan apakah zoro memiliki akses untuk download foto atau tidak
